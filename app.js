@@ -2,17 +2,16 @@
   Makeshift Input/Output Iot Backend
 */
 const express = require('express');
-const bodyParser = require('body-parser');
 const yaml = require('js-yaml');
 const fs   = require('fs');
 const WebSocket = require('ws');
 const chalk = require('chalk');
-
+const _set = require('lodash.set');
+const _get = require('lodash.get');
 
 var devices = []; // list of connected iot devices
 
 var config = []; // current configuration
-
 
 /*
   get configs
@@ -24,8 +23,11 @@ require('dotenv').config();
 // project config
 var defaultConfig = null;
 try {
-  if (fs.existsSync('./config.yml')) {
-    defaultConfig = yaml.safeLoad(fs.readFileSync('./config.yml', 'utf8'));
+
+  let configfile = (process.env.CONFIG ? './'+process.env.CONFIG : './config.yml');
+
+  if (fs.existsSync(configfile)) {
+    defaultConfig = yaml.safeLoad(fs.readFileSync(configfile, 'utf8'));
   } else {
     defaultConfig = yaml.safeLoad(fs.readFileSync('./sample.config.yml', 'utf8'));
   }
@@ -41,8 +43,8 @@ config = defaultConfig;
 */
 
 const app = express();
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json())
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 /*
   Return the current project configuration
@@ -65,21 +67,153 @@ function nestedLoopEndpoints(obj, app) {
             if(value != undefined) {
                 if (value && typeof value === 'object') {
 
-                  console.log(('Created')+' '+chalk.bold.bgGreen("GET")+' '+chalk.bold(path+'/'+key)+' - expect:'+(typeof value));
+                  /*
+                    is object data
+                  */
                   app.get(path+'/'+key, (req, res) => {
-                    res.json(value);
+                    let opath = (path+'/'+key).replace(/\//g,'.').substring(1);
+                    let data = _get(config,opath);
+                    return res.json(data);
                   });
+                  console.log(('Created')+' '+chalk.bold.bgGreen(" GET    ")+' '+chalk.bold(path+'/'+key)+' - expect:'+(typeof value));
+
+                  app.post(path+'/'+key, (req, res) => {
+                    let opath = (path+'/'+key).replace(/\//g,'.').substring(1);
+                    let oldData = _get(config,opath);
+                    let newData = req.body;
+
+                    let aKeys = Object.keys(oldData).sort();
+                    let bKeys = Object.keys(newData).sort();
+                    if( JSON.stringify(aKeys) !== JSON.stringify(bKeys))  return res.status(400).json({message: 'object properties are not equal.'});
+                    // todo: Typecheck?!
+
+                    _set(config,opath,newData);
+                    let settetData = _get(config,opath);
+                    sendUpdateToDevices();
+
+                    return res.json(newData);
+                  });
+                  console.log(('Created')+' '+chalk.bold.bgCyan(" POST   ")+' '+chalk.bold(path+'/'+key)+' - expect:'+(typeof value));
+                  app.put(path+'/'+key, (req, res) => {
+                    let opath = (path+'/'+key).replace(/\//g,'.').substring(1);
+                    let oldData = _get(config,opath);
+                    let newData = req.body;
+
+                    let aKeys = Object.keys(oldData).sort();
+                    let bKeys = Object.keys(newData).sort();
+                    if( JSON.stringify(aKeys) !== JSON.stringify(bKeys))  return res.status(400).json({message: 'object properties are not equal.'});
+                    // todo: Typecheck?!
+
+                    _set(config,opath,newData);
+                    let settetData = _get(config,opath);
+                    sendUpdateToDevices();
+
+                    return res.json(newData);
+                  });
+                  console.log(('Created')+' '+chalk.bold.bgBlue(" PUT    ")+' '+chalk.bold(path+'/'+key)+' - expect:'+(typeof value));
+                  app.patch(path+'/'+key, (req, res) => {
+                    let opath = (path+'/'+key).replace(/\//g,'.').substring(1);
+                    let oldData = _get(config,opath);
+                    let newData = req.body;
+
+                    let manipulatedData = oldData;
+                    Object.keys(newData).forEach(k => {
+                      if(typeof oldData[k] === "undefined") return res.status(400).json({message: 'property '+k+' not found on defaultConfig.'});
+                      manipulatedData[k] = newData[k];
+                    });
+
+                    _set(config,opath,manipulatedData);
+                    let settetData = _get(config,opath);
+                    sendUpdateToDevices();
+
+                    return res.json(manipulatedData);
+                  });
+                  console.log(('Created')+' '+chalk.bold.bgYellow(" PATCH  ")+' '+chalk.bold(path+'/'+key)+' - expect:'+(typeof value));
+                  app.delete(path+'/'+key, (req, res) => {
+                    let opath = (path+'/'+key).replace(/\//g,'.').substring(1);
+                    let oldData = _get(config,opath);
+                    let newData = _get(defaultConfig,opath);
+
+                    _set(config,opath,newData);
+                    let settetData = _get(config,opath);
+                    sendUpdateToDevices();
+
+                    return res.json(newData);
+                  });
+                  console.log(('Created')+' '+chalk.bold.bgRed(" DELETE ")+' '+chalk.bold(path+'/'+key)+' - expect:'+(typeof value));
 
                   recurse(value, key, path+'/'+key, app);
                 } else {
 
-                    console.log(('Created')+' '+chalk.bold.bgGreen("GET")+' '+chalk.bold(path+'/'+key)+' - expect:'+(typeof value));
+                    /*
+                      simple flat data
+                    */
                     app.get(path+'/'+key, (req, res) => {
-                      res.json(value);
+                      let opath = (path+'/'+key).replace(/\//g,'.').substring(1);
+                      let data = _get(config,opath);
+                      return res.json(data);
                     });
+                    console.log(('Created')+' '+chalk.bold.bgGreen(" GET    ")+' '+chalk.bold(path+'/'+key)+' - expect:'+(typeof value));
 
-                  	// Do your stuff here to var value
-                    res[key] = value;
+                    app.post(path+'/'+key, (req, res) => {
+                      let opath = (path+'/'+key).replace(/\//g,'.').substring(1);
+                      let oldData = _get(config,opath);
+                      let newData = req.body[key];
+
+                      if(typeof newData === "undefined") return res.status(400).json({message: 'sent data (POST param: '+key+') to update data.'});
+                      if(typeof newData !== typeof oldData) return res.status(400).json({message: 'new data is not the same datatype as old data.'});
+
+                      _set(config,opath,newData);
+                      let settetData = _get(config,opath);
+                      sendUpdateToDevices();
+
+                      return res.json(newData);
+                    });
+                    console.log(('Created')+' '+chalk.bold.bgCyan(" POST   ")+' '+chalk.bold(path+'/'+key)+' - expect:'+(typeof value));
+                    app.put(path+'/'+key, (req, res) => {
+                      let opath = (path+'/'+key).replace(/\//g,'.').substring(1);
+                      let oldData = _get(config,opath);
+                      let newData = req.body[key];
+
+                      if(typeof newData === "undefined") return res.status(400).json({message: 'sent data (PUT param: '+key+') to update data.'});
+                      if(typeof newData !== typeof oldData) return res.status(400).json({message: 'new data is not the same datatype as old data.'});
+
+                      _set(config,opath,newData);
+                      let settetData = _get(config,opath);
+                      sendUpdateToDevices();
+
+                      return res.json(newData);
+                    });
+                    console.log(('Created')+' '+chalk.bold.bgBlue(" PUT    ")+' '+chalk.bold(path+'/'+key)+' - expect:'+(typeof value));
+                    app.patch(path+'/'+key, (req, res) => {
+                      let opath = (path+'/'+key).replace(/\//g,'.').substring(1);
+                      let oldData = _get(config,opath);
+                      let newData = req.body[key];
+
+                      if(typeof newData === "undefined") return res.status(400).json({message: 'sent data (PATCH param: '+key+') to update data.'});
+                      if(typeof newData !== typeof oldData) return res.status(400).json({message: 'new data is not the same datatype as old data.'});
+
+                      _set(config,opath,newData);
+                      let settetData = _get(config,opath);
+                      sendUpdateToDevices();
+
+                      return res.json(newData);
+                    });
+                    console.log(('Created')+' '+chalk.bold.bgYellow(" PATCH  ")+' '+chalk.bold(path+'/'+key)+' - expect:'+(typeof value));
+                    app.delete(path+'/'+key, (req, res) => {
+                      let opath = (path+'/'+key).replace(/\//g,'.').substring(1);
+                      let oldData = _get(config,opath);
+                      let newData = _get(defaultConfig,opath);
+
+                      _set(config,opath,newData);
+                      let settetData = _get(config,opath);
+                      sendUpdateToDevices();
+
+                      return res.json(newData);
+                    });
+                    console.log(('Created')+' '+chalk.bold.bgRed(" DELETE ")+' '+chalk.bold(path+'/'+key)+' - expect:'+(typeof value));
+                    console.log('---');
+
                 }
             }
         }
@@ -88,8 +222,9 @@ function nestedLoopEndpoints(obj, app) {
     return res;
 }
 
-app.listen(8080, () => {
-  console.log('Backend API listening on port 8080.');
+let httpPort = (process.env.PORT ? process.env.PORT : 8080);
+app.listen(httpPort, () => {
+  console.log('Backend API listening on port '+httpPort+'.');
 });
 
 
@@ -97,7 +232,8 @@ app.listen(8080, () => {
   WebSocket
   On Connection
 */
-const wss = new WebSocket.Server({ port: 3000 });
+let wsPort = (process.env.WSPORT ? process.env.WSPORT : 3000);
+const wss = new WebSocket.Server({ port: wsPort });
 
 wss.on('connection', (ws) => {
   console.log("New Iot Device Connection");
@@ -114,4 +250,16 @@ wss.on('connection', (ws) => {
 
 });
 
-console.log('Backend Websocket listening on port 3000.');
+function sendUpdateToDevices(){
+  console.log('Sending update to devices...');
+  if(devices.length){
+    devices.forEach(function(d) {
+      d.send(JSON.stringify(config));
+    });
+    console.log(chalk.green('Done!'));
+  } else {
+    console.log('No devices connected trough WebSocket.');
+  }
+}
+
+console.log('Backend Websocket listening on port '+wsPort+'.');

@@ -2,7 +2,7 @@
 
 This nodejs express app provides a simple yet powerful way to create a Iot Input&Output backend in minutes.
 
-You only need to configure your default configuration of your project in a intuitive yaml file and it will automatically create a simple HTTP-Server with all nessesary endpoints and on top a WebSocket, which will receive changes on the configuration in a blink of an eye! 
+You only need to configure the default configuration for your project (in an intuitive yaml file) and it will automatically create a simple HTTP-Server with all nessesary endpoints and on top a WebSocket, which will receive changes on the configuration in a blink of an eye! 
 
 ## Getting started
 
@@ -15,7 +15,7 @@ npm start
 ## Configuration
 
 Your project can be defined in a ```/config.yml```. You can modify the /sample.config.yml or use it as reference.
-This is the default configuration of your project. With the POST Endpoints these configurations can be changed by your devices with simple HTTP-Requests.
+This will be the default configuration of your project. With POST Endpoints these configurations can be changed by your devices.
 
 ```yaml
 # simple on / off logic

@@ -1,4 +1,4 @@
-# Makeshift node Iot Backend
+# Makeshift Node Iot Backend
 
 This nodejs express app provides a simple yet powerful way to create a Iot Input&Output backend in minutes.
 

@@ -1,0 +1,28 @@
+{
+  "name": "makeshift-node-iot-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/geckse/makeshift-node-iot-backend.git"
+  },
+  "author": "geckse",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/geckse/makeshift-node-iot-backend/issues"
+  },
+  "homepage": "https://github.com/geckse/makeshift-node-iot-backend#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "chalk": "^4.1.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "js-yaml": "^3.14.0",
+    "ws": "^7.2.1"
+  }
+}

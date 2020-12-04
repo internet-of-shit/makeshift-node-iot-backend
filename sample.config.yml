@@ -1,0 +1,24 @@
+# you can define here the default json response for you project
+# the file is written in yaml: https://learnxinyminutes.com/docs/yaml/
+
+# simple on / off logic
+# controllable via endpoint: HTTP GET & POST /lamp1, resp. /lamp2
+lamp1: true
+lamp2: true
+
+# nested objects
+# controllable via endpoint: HTTP GET & POST /livingroom/lamp, resp. /kitchen/lamp
+livingroom:
+  lamp:
+    brightness: 0.5
+    power: true
+  window: false
+kitchen:
+  lamp: false
+  window: false
+
+# you can also utilize datatypes
+# controllable via endpoint: HTTP GET & POST /volume, etc..
+volume: 0.1
+brightness: 100
+status: "online"

@@ -57,13 +57,13 @@ You'll also find a ```.env.sample``` which (after you renamed it to ```.env```) 
 * You can use services like [Heroku](https://www.heroku.com/) to host this app. (Free-Tier should be sufficient enough)
 * Connect devices via the internet with http://myiotbackend.herokuapp.com
 
-## ToDo
+## Progress
 
 - [x] configuration via yaml
 - [x] build & retrieve current configuration via HTTP GET requests
 - [x] create WebSocket, list connected devices, send current configration to connected devices
-- [ ] change current configuration via HTTP POST & PATCH requests
-- [ ] notify connected devices via WebSocket on changes
-- [ ] simple access-key-based authentification
-- [ ] persistent changed configuration (save current configuration to file system)
+- [x] change current configuration via HTTP POST & PATCH requests
+- [x] notify connected devices via WebSocket on changes
+- [x] simple access-key-based authentification
+- [x] persistent changed configuration (save current configuration to file system)
 

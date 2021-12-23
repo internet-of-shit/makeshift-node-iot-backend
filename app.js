@@ -8,6 +8,7 @@ const WebSocket = require('ws');
 const chalk = require('chalk');
 const _set = require('lodash.set');
 const _get = require('lodash.get');
+const _merge = require('lodash.merge');
 
 var devices = []; // list of connected iot devices
 
@@ -35,8 +36,21 @@ try {
   console.log('failed loading config.yml',e);
 }
 
+// load data from persistent cache
+var persistentConfig = null;
+try {
+  let datafile = './data.yml';
+  if (fs.existsSync(datafile)) {
+    persistentConfig = yaml.safeLoad(fs.readFileSync(datafile, 'utf8'));
+  } else {
+    console.log('no data.yml, so we just load default config',e);
+  }
+} catch (e) {
+  console.log('failed loading data.yml',e);
+}
+
 // set the current config
-config = defaultConfig;
+config = _merge(defaultConfig, persistentConfig);
 
 /*
   Create the HTTP Server
@@ -89,6 +103,7 @@ function nestedLoopEndpoints(obj, app) {
 
                     _set(config,opath,newData);
                     let settetData = _get(config,opath);
+                    persistentCache();
                     sendUpdateToDevices();
 
                     return res.json(newData);
@@ -106,6 +121,7 @@ function nestedLoopEndpoints(obj, app) {
 
                     _set(config,opath,newData);
                     let settetData = _get(config,opath);
+                    persistentCache();
                     sendUpdateToDevices();
 
                     return res.json(newData);
@@ -124,6 +140,7 @@ function nestedLoopEndpoints(obj, app) {
 
                     _set(config,opath,manipulatedData);
                     let settetData = _get(config,opath);
+                    persistentCache();
                     sendUpdateToDevices();
 
                     return res.json(manipulatedData);
@@ -136,6 +153,7 @@ function nestedLoopEndpoints(obj, app) {
 
                     _set(config,opath,newData);
                     let settetData = _get(config,opath);
+                    persistentCache();
                     sendUpdateToDevices();
 
                     return res.json(newData);
@@ -165,6 +183,7 @@ function nestedLoopEndpoints(obj, app) {
 
                       _set(config,opath,newData);
                       let settetData = _get(config,opath);
+                      persistentCache();
                       sendUpdateToDevices();
 
                       return res.json(newData);
@@ -180,6 +199,7 @@ function nestedLoopEndpoints(obj, app) {
 
                       _set(config,opath,newData);
                       let settetData = _get(config,opath);
+                      persistentCache();
                       sendUpdateToDevices();
 
                       return res.json(newData);
@@ -195,6 +215,7 @@ function nestedLoopEndpoints(obj, app) {
 
                       _set(config,opath,newData);
                       let settetData = _get(config,opath);
+                      persistentCache();
                       sendUpdateToDevices();
 
                       return res.json(newData);
@@ -207,6 +228,7 @@ function nestedLoopEndpoints(obj, app) {
 
                       _set(config,opath,newData);
                       let settetData = _get(config,opath);
+                      persistentCache();
                       sendUpdateToDevices();
 
                       return res.json(newData);
@@ -260,6 +282,16 @@ function sendUpdateToDevices(){
   } else {
     console.log('No devices connected trough WebSocket.');
   }
+}
+
+function persistentCache(){
+  try {
+    let datafile = './data.yml';
+    fs.writeFileSync(datafile, yaml.dump(config) );
+  } catch (e) {
+    console.log('failed saving data.yml',e);
+  }
+
 }
 
 console.log('Backend Websocket listening on port '+wsPort+'.');

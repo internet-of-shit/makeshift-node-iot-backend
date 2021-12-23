@@ -18,13 +18,14 @@
   },
   "homepage": "https://github.com/geckse/makeshift-node-iot-backend#readme",
   "dependencies": {
-    "body-parser": "^1.19.0",
-    "chalk": "^4.1.0",
-    "dotenv": "^8.2.0",
-    "express": "^4.17.1",
-    "js-yaml": "^3.14.0",
+    "body-parser": "^1.19.1",
+    "chalk": "^4.1.2",
+    "dotenv": "^8.6.0",
+    "express": "^4.17.2",
+    "js-yaml": "^3.14.1",
     "lodash.get": "^4.4.2",
+    "lodash.merge": "^4.6.2",
     "lodash.set": "^4.3.2",
-    "ws": "^7.2.1"
+    "ws": "^7.5.6"
   }
 }

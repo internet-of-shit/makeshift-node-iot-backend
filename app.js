@@ -61,6 +61,22 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 /*
+  if we require a accessKey for the API
+*/
+if(process.env.ACCESSKEY && process.env.ACCESSKEY.length > 0){
+  app.use((req, res, next) => {
+    if (!req.headers.authorization && !req.body['AccessKey']) {
+      return res.status(403).json({ error: 'No Access' });
+    } else if (req.headers.authorization != process.env.ACCESSKEY && req.body['AccessKey'] != process.env.ACCESSKEY){
+      return res.status(403).json({ error: 'No Access' });
+    }
+    // delete it, so it doesn't appear in the persistent config and gets exposed
+    delete req.body['AccessKey'];
+    next();
+  });
+}
+
+/*
   Return the current project configuration
 */
 app.get('/', (req, res) => {
